@@ -7,4 +7,6 @@
  */
 public class Search
 {
+
+    public int in;
 }
