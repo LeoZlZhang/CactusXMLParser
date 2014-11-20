@@ -6,7 +6,7 @@ Rule: field name should be the tag name in XML, and for ArrayList there should b
 
 Example
 
------Class-----
+=====Class=====
 public class Tar
 {
   int a;
@@ -22,7 +22,7 @@ public class Inner
   ArrayList<Integer> c2;
 }
 
--------XML--------
+=====XML======
 <Configure>
   <a>99</a>
   <b>true</b>
