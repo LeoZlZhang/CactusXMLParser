@@ -1,6 +1,7 @@
 package Cactus.Parse;
 
 import Cactus.FIND.NodeFinder;
+import org.apache.log4j.Logger;
 import org.w3c.dom.Node;
 
 import java.lang.reflect.Field;
@@ -15,6 +16,8 @@ import java.util.ArrayList;
  */
 public class NodeParser
 {
+    private static Logger errLogger = Logger.getLogger("forERROR");
+    private static Logger infoLogger = Logger.getLogger("forINFO");
 
     public static Object parse(Node node, Class c, String type) throws Exception
     {
@@ -23,82 +26,45 @@ public class NodeParser
         return parse(tempNodeList, c, type);
     }
 
-    public static Object parse(ArrayList<Node> startNodeList, Class c, String type) throws Exception
-    {
-        Object obj = setInstanceAsFixedClass(startNodeList, c, type);        //ArrayList will be handle in here
-        if (obj == null)
-        {                   //Not base class
-            obj = InstanceCreator(c);
-            for (Field field : c.getFields())
-            {
-                ArrayList<Node> tarNodeList = NodeFinder.find(startNodeList.get(0), field.getName());
-                if (tarNodeList.size() == 0)
-                    continue;
-
-                field.set(obj, parse(tarNodeList, field.getType(), field.getGenericType().toString()));
-            }
-            return obj;
-        } else
-        {
-            return obj;       //base class
-        }
-    }
-
-    public static Object InstanceCreator(Class c) throws IllegalAccessException, InstantiationException, ClassNotFoundException, InvocationTargetException
-    {
-        if (c.getName().contains("$"))
-        {
-            /**
-             * To create instance of inner class as below way
-             * InnerClass.getDeclaredConstructors()[0].newInstance(new OutClass)
-             */
-            String[] classNameList = c.getName().split("\\$");
-            Object resObj = Class.forName(classNameList[0]).newInstance();
-            for (int i = 1; i < classNameList.length; i++)
-            {
-                String className = classNameList[0];
-                for (int j = 1; j <= i; j++)
-                {
-                    className = className + "$" + classNameList[j];
-                }
-                resObj = Class.forName(className).getDeclaredConstructors()[0].newInstance(resObj);
-            }
-            return resObj;
-        } else
-        {
-            return c.newInstance();
-        }
-    }
-
-    private static Object setInstanceAsFixedClass(ArrayList<Node> nodeList, Class c, String type) throws Exception
+    private static Object parse(ArrayList<Node> nodeList, Class c, String type) throws Exception
     {
         String value = nodeList.get(0).getFirstChild().getNodeValue();
+        String nodeName = nodeList.get(0).getNodeName();
+        //For base class case
         if ((c.equals(int.class)) || (c.equals(Integer.class)))
         {
+            infoLogger.info("Set  Integer\t\t" + nodeName + "\t\"" + value + "\"");
             return new Integer(value);
         } else if ((c.equals(long.class)) || (c.equals(Long.class)))
         {
+            infoLogger.info("Set  Long\t\t" + nodeName + "\t\"" + value + "\"");
             return new Long(value);
         } else if ((c.equals(short.class)) || (c.equals(Short.class)))
         {
+            infoLogger.info("Set  Short\t\t" + nodeName + "\t\"" + value + "\"");
             return new Short(value);
         } else if (c.equals(String.class))
         {
+            infoLogger.info("Set  String\t\t" + nodeName + "\t\"" + value + "\"");
             return value;
         } else if ((c.equals(float.class)) || (c.equals(Float.class)))
         {
+            infoLogger.info("Set  Float\t\t" + nodeName + "\t\"" + value + "\"");
             return new Float(value);
         } else if ((c.equals(double.class)) || (c.equals(Double.class)))
         {
+            infoLogger.info("Set  Double\t\t" + nodeName + "\t\"" + value + "\"");
             return new Double(value);
         } else if (c.equals(char.class))
         {
+            infoLogger.info("Set  char\t\t" + nodeName + "\t\"" + value.toCharArray()[0] + "\"");
             return value.toCharArray()[0];
         } else if ((c.equals(Boolean.class)) || (c.equals(boolean.class)))
         {
+            infoLogger.info("Set  Boolean\t\t" + nodeName + "\t\"" + value + "\"");
             return Boolean.valueOf(value);
         } else if (c.equals(ArrayList.class))
-        {
+        {   //For ArrayList case
             String innerClassName = type.substring(type.indexOf("<") + 1, type.lastIndexOf(">"));
             String innerType;
             if (innerClassName.indexOf("<") > 0)
@@ -113,12 +79,74 @@ public class NodeParser
                 innerType = "";
             }
             ArrayList<Object> resList = new ArrayList<Object>();
+            infoLogger.info("Set  ArrayList<" + type + ">\t\t" + nodeName);
             for (Node node : nodeList)
             {
                 resList.add(parse(node, Class.forName(innerClassName), innerType));
             }
+            infoLogger.info("Set  ArrayList<" + type + ">\t\t" + nodeName + " size=" + resList.size());
             return resList;
+        } else
+        {   //For normal class case
+            infoLogger.info("Set  " + c.getName() + "\t\t" + nodeName);
+            Object obj = InstanceCreator(c);
+            for (Field field : c.getFields())
+            {
+                ArrayList<Node> tarNodeList = NodeFinder.find(nodeList.get(0), field.getName());
+                if (tarNodeList.size() == 0)
+                    continue;
+
+                field.set(obj, parse(tarNodeList, field.getType(), field.getGenericType().toString()));
+            }
+            return obj;
         }
-        return null;
+    }
+
+    public static Object InstanceCreator(Class c) throws IllegalAccessException, ClassNotFoundException, InvocationTargetException, InstantiationException
+    {
+        if (c.getName().contains("$"))
+        {
+            /**
+             * To create instance of inner class as below way
+             * InnerClass.getDeclaredConstructors()[0].newInstance(new OutClass)
+             */
+            String[] classNameList = c.getName().split("\\$");
+            Object resObj;
+            try
+            {
+                resObj = Class.forName(classNameList[0]).newInstance();
+            } catch (InstantiationException e)
+            {
+                errLogger.error("Fail to create instance of class \"" + classNameList[0] + "\"");
+                throw e;
+            }
+            for (int i = 1; i < classNameList.length; i++)
+            {
+                String className = classNameList[0];
+                for (int j = 1; j <= i; j++)
+                {
+                    className = className + "$" + classNameList[j];
+                }
+                try
+                {
+                    resObj = Class.forName(className).getDeclaredConstructors()[0].newInstance(resObj);
+                } catch (InstantiationException e)
+                {
+                    errLogger.error("Fail to create instance of inner class \"" + className + "\"");
+                    throw e;
+                }
+            }
+            return resObj;
+        } else
+        {
+            try
+            {
+                return c.newInstance();
+            } catch (InstantiationException e)
+            {
+                errLogger.error("Fail to create instance of class \"" + c.getName() + "\"");
+                throw e;
+            }
+        }
     }
 }
