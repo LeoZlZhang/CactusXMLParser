@@ -33,35 +33,35 @@ public class NodeParser
         //For base class case
         if ((c.equals(int.class)) || (c.equals(Integer.class)))
         {
-            infoLogger.info("Set  Integer\t\t" + nodeName + "\t\"" + value + "\"");
+            infoLogger.info("Set" + "\t" + nodeName + "\t" + "as\tInteger" + "\t\"" + value + "\"");
             return new Integer(value);
         } else if ((c.equals(long.class)) || (c.equals(Long.class)))
         {
-            infoLogger.info("Set  Long\t\t" + nodeName + "\t\"" + value + "\"");
+            infoLogger.info("Set" + "\t" + nodeName + "\t" + "as\tLong" + "\t\"" + value + "\"");
             return new Long(value);
         } else if ((c.equals(short.class)) || (c.equals(Short.class)))
         {
-            infoLogger.info("Set  Short\t\t" + nodeName + "\t\"" + value + "\"");
+            infoLogger.info("Set" + "\t" + nodeName + "\t" + "as\tShort" + "\t\"" + value + "\"");
             return new Short(value);
         } else if (c.equals(String.class))
         {
-            infoLogger.info("Set  String\t\t" + nodeName + "\t\"" + value + "\"");
+            infoLogger.info("Set" + "\t" + nodeName + "\t" + "as\tString" + "\t\"" + value + "\"");
             return value;
         } else if ((c.equals(float.class)) || (c.equals(Float.class)))
         {
-            infoLogger.info("Set  Float\t\t" + nodeName + "\t\"" + value + "\"");
+            infoLogger.info("Set" + "\t" + nodeName + "\t" + "as\tFloat" + "\t\"" + value + "\"");
             return new Float(value);
         } else if ((c.equals(double.class)) || (c.equals(Double.class)))
         {
-            infoLogger.info("Set  Double\t\t" + nodeName + "\t\"" + value + "\"");
+            infoLogger.info("Set" + "\t" + nodeName + "\t" + "as\tDouble" + "\t\"" + value + "\"");
             return new Double(value);
         } else if (c.equals(char.class))
         {
-            infoLogger.info("Set  char\t\t" + nodeName + "\t\"" + value.toCharArray()[0] + "\"");
+            infoLogger.info("Set" + "\t" + nodeName + "\t" + "as\tchar" + "\t\"" + value.toCharArray()[0] + "\"");
             return value.toCharArray()[0];
         } else if ((c.equals(Boolean.class)) || (c.equals(boolean.class)))
         {
-            infoLogger.info("Set  Boolean\t\t" + nodeName + "\t\"" + value + "\"");
+            infoLogger.info("Set" + "\t" + nodeName + "\t" + "as\tBoolean" + "\t\"" + value + "\"");
             return Boolean.valueOf(value);
         } else if (c.equals(ArrayList.class))
         {   //For ArrayList case
@@ -79,16 +79,16 @@ public class NodeParser
                 innerType = "";
             }
             ArrayList<Object> resList = new ArrayList<Object>();
-            infoLogger.info("Set  ArrayList<" + type + ">\t\t" + nodeName);
+            infoLogger.info("Set" + "\t" + nodeName + "\t" + "as\tArrayList<" + type + ">");
             for (Node node : nodeList)
             {
                 resList.add(parse(node, Class.forName(innerClassName), innerType));
             }
-            infoLogger.info("Set  ArrayList<" + type + ">\t\t" + nodeName + " size=" + resList.size());
+            infoLogger.info("Set" + "\t" + nodeName + "\t" + "as\tArrayList<" + type + ">" + " size=" + resList.size());
             return resList;
         } else
         {   //For normal class case
-            infoLogger.info("Set  " + c.getName() + "\t\t" + nodeName);
+            infoLogger.info("Set" + "\t" + nodeName + "\t" + "as\t" + c.getName());
             Object obj = InstanceCreator(c);
             for (Field field : c.getFields())
             {
